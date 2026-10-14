@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0a1218">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="配達先">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>配達先さがし</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* 夜明け前の市場: 墨のような濃い藍の地に、真鍮色の細い線と文字だけを光らせる。見出しは明朝、本文はゴシック。 */
+:root{
+  --ink:#0a1218; --surface:#121e28; --raise:#182733; --paper:#ece6d8; --muted:#8f9ca5; --line:rgba(236,230,216,.13);
+  --brass:#c9a96b; --brass2:#e8d3a2; --bad:#f0a79e; --good:#7fd1a1;
+  --display:"Shippori Mincho B1","Noto Serif JP","Hiragino Mincho ProN",serif;
+  --body:"Noto Sans JP","Hiragino Sans",sans-serif;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:radial-gradient(900px 420px at 50% -80px,#16283a 0%,rgba(22,40,58,0) 70%),var(--ink);background-attachment:fixed;color:var(--paper);font-family:var(--body);letter-spacing:.02em;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+button{font-family:inherit;cursor:pointer}
+.hid{display:none!important}
+:focus-visible{outline:2px solid var(--brass2);outline-offset:2px}
+
+/* ---- 会社を選ぶ・PASS ---- */
+.gate{position:fixed;inset:0;z-index:80;overflow-y:auto;background:radial-gradient(800px 460px at 50% -60px,#1a3045 0%,rgba(26,48,69,0) 70%),var(--ink);padding:calc(var(--safe-t) + 34px) 22px 40px}
+.gate .in{max-width:520px;margin:0 auto}
+.gate .logo{width:72px;height:72px;border-radius:18px;display:block;box-shadow:0 0 0 1px rgba(201,169,107,.55),0 18px 40px -14px #000}
+.gate h1{font-family:var(--display);font-weight:800;font-size:27px;letter-spacing:.14em;margin-top:18px}
+.gate h1::after{content:"";display:block;width:44px;height:1px;background:var(--brass);margin:14px 0 0}
+.gate .lead{color:var(--muted);font-size:13.5px;letter-spacing:.05em;margin:14px 0 26px;line-height:1.8}
+.pull{position:relative;margin-bottom:10px}
+.pull label{display:block;font-size:11.5px;color:var(--brass);letter-spacing:.2em;margin-bottom:8px}
+.pull select{appearance:none;-webkit-appearance:none;width:100%;font-family:var(--display);font-size:21px;font-weight:700;color:var(--paper);background:linear-gradient(180deg,#15222d,#101a23);border:1px solid rgba(201,169,107,.45);border-radius:14px;padding:17px 48px 17px 18px;outline:none;box-shadow:0 18px 36px -24px #000}
+.pull select:focus{border-color:var(--brass2);box-shadow:0 0 0 3px rgba(201,169,107,.18)}
+.pull::after{content:"";position:absolute;right:20px;bottom:25px;width:9px;height:9px;border-right:1.5px solid var(--brass);border-bottom:1.5px solid var(--brass);transform:rotate(45deg);pointer-events:none}
+.pull option{font-family:var(--body);font-size:16px;color:#111;background:#fff}
+.note-s{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;letter-spacing:.06em}
+.passbox{background:linear-gradient(180deg,#15222d,#0f1921);border:1px solid rgba(201,169,107,.3);border-radius:20px;box-shadow:0 30px 60px -30px #000;padding:24px 22px}
+.passbox .who{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.passbox .who .mk{width:46px;height:46px;border-radius:11px;display:grid;place-items:center;color:#fff;font-family:var(--display);font-weight:800;font-size:22px;flex:none}
+.passbox .who b{font-family:var(--display);font-weight:800;letter-spacing:.08em;font-size:19px}
+.passbox label{display:block;color:var(--brass);letter-spacing:.14em;font-size:11px;margin-bottom:8px}
+.passbox input{width:100%;font-size:26px;letter-spacing:.3em;text-align:center;font-weight:700;background:var(--ink);color:var(--paper);border:1px solid var(--line);border-bottom:1px solid var(--brass);border-radius:12px;padding:12px;outline:none}
+.passbox input:focus{border-color:var(--brass);box-shadow:0 0 0 3px rgba(201,169,107,.16)}
+.perr{color:var(--bad);font-weight:700;font-size:13px;min-height:20px;margin-top:10px}
+.gate .bl{background:none;border:0;color:var(--muted);font-size:13px;letter-spacing:.08em;margin-top:18px;padding:6px 0}
+
+/* ---- 本体 ---- */
+.app{max-width:640px;margin:0 auto;min-height:100%;padding-bottom:calc(110px + var(--safe-b))}
+.band{background:linear-gradient(180deg,#101c26 0%,#0b141b 100%);border-bottom:1px solid rgba(201,169,107,.35);box-shadow:0 14px 30px -22px #000;padding:calc(var(--safe-t) + 12px) 16px 13px;position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px}
+.band .ico{width:42px;height:42px;border-radius:11px;flex:none;box-shadow:0 0 0 1px rgba(201,169,107,.5)}
+.band .t{flex:1;min-width:0}
+.band .t b{display:block;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.band .t span{font-size:11px;color:var(--brass);letter-spacing:.14em}
+.gear{width:42px;height:42px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--brass2);border-radius:50%;display:grid;place-items:center;padding:0;flex:none}
+.gear svg{width:20px;height:20px}
+.sync{margin:16px 16px 0;font-size:12.5px;font-weight:700;padding:9px 12px;border-radius:10px;background:var(--raise);color:var(--muted);border:1px solid var(--line)}
+.sync.warn{color:var(--bad);border-color:rgba(240,167,158,.35)}
+.view{padding:18px 16px 0}
+.searchbar{position:sticky;top:71px;z-index:20;padding:6px 0 12px;background:linear-gradient(rgba(10,18,24,.92) 74%,rgba(10,18,24,0))}
+.searchbar input{width:100%;font-family:var(--body);font-size:19px;font-weight:500;padding:16px 18px 16px 50px;border:1px solid var(--line);border-radius:16px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23c9a96b' stroke-width='1.7' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 21 21'/%3E%3C/svg%3E") no-repeat 17px center;color:var(--paper);outline:none;box-shadow:0 18px 34px -24px #000;letter-spacing:.04em}
+.searchbar input:focus{border-color:var(--brass);box-shadow:0 0 0 3px rgba(201,169,107,.16),0 18px 34px -24px #000}
+.searchbar input::placeholder{font-size:16px;font-weight:400;color:#6f7d87}
+.hint{font-size:12.5px;color:var(--muted);margin:2px 2px 0;line-height:1.7}
+.idle,.none{text-align:center;color:var(--muted);padding:36px 8px 6px;font-size:13.5px;line-height:1.9;letter-spacing:.06em}
+.idle b{color:var(--brass2)}
+.none .big{font-size:30px;margin-bottom:6px;color:var(--brass)}
+
+/* ---- カード ---- */
+.card{position:relative;margin:16px 0 0;border-radius:18px;border:1px solid var(--line);background:linear-gradient(180deg,#16242f 0%,#101b24 100%);padding:22px 20px 18px 24px;box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 22px 40px -26px rgba(0,0,0,.9);overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:22px;bottom:22px;width:2px;border-radius:2px;background:linear-gradient(var(--brass),rgba(201,169,107,.15))}
+.card .head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.card .nm{font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:.05em;line-height:1.4;word-break:break-all}
+.card .al{font-size:12px;color:var(--muted);margin-top:3px;letter-spacing:.06em}
+.edit{flex:none;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--paper);border-radius:10px;font-size:12.5px;font-weight:700;padding:8px 12px;letter-spacing:.1em}
+.time{display:flex;align-items:baseline;gap:10px;margin-top:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.time small{font-size:10.5px;color:var(--brass);letter-spacing:.18em}
+.time b{font-family:var(--display);font-weight:700;font-size:30px;letter-spacing:.06em;color:var(--brass2)}
+.time b.empty{font-size:16px;color:var(--muted);font-weight:500}
+.rows{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;margin-top:14px}
+.rows .k{font-size:10.5px;color:var(--brass);letter-spacing:.14em;padding-top:4px;white-space:nowrap}
+.rows .v{font-size:16px;font-weight:500;line-height:1.55}
+.rows .v.note{font-size:14.5px;color:var(--muted);white-space:pre-wrap}
+.rows .v.empty{color:var(--muted);font-weight:400;font-size:14px}
+
+/* ---- ボタン ---- */
+.btn{border:0;border-radius:14px;font-size:15px;font-weight:700;letter-spacing:.08em;padding:13px 16px;min-height:50px}
+.btn.main{background:linear-gradient(180deg,#e0c88f,#c3a263);color:#1a1405;box-shadow:0 14px 26px -16px rgba(201,169,107,.7);font-weight:800}
+.btn.main:active{transform:translateY(1px);box-shadow:none}
+.btn.line{background:transparent;color:var(--paper);border:1px solid var(--line)}
+.btn.navy{background:var(--raise);color:var(--paper);border:1px solid rgba(201,169,107,.4)}
+.btn.ghost{background:transparent;color:var(--muted)}
+.btn.danger{background:transparent;color:#e07a6e}
+.btn:disabled{opacity:.5}
+.acts{display:flex;gap:10px;margin-top:14px}
+.flex1{flex:1}
+.add-new{margin-top:14px}
+.fab{position:fixed;right:max(18px,calc(50% - 302px));bottom:calc(22px + var(--safe-b));z-index:40;height:58px;padding:0 24px 0 20px;border:0;border-radius:99px;background:linear-gradient(180deg,#e0c88f,#c3a263);color:#1a1405;font-weight:800;font-size:15px;letter-spacing:.1em;display:flex;align-items:center;gap:8px;box-shadow:0 18px 34px -14px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.12) inset}
+.fab svg{width:22px;height:22px;stroke:#1a1405;fill:none;stroke-width:2;stroke-linecap:round}
+
+/* ---- シート ---- */
+.back{position:fixed;inset:0;background:rgba(3,8,12,.66);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);z-index:60}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;max-width:640px;margin:0 auto;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,#121f2a,#0d171f);border-top:1px solid rgba(201,169,107,.4);border-radius:26px 26px 0 0;padding:16px 18px calc(24px + var(--safe-b));box-shadow:0 -30px 60px -20px #000}
+.sheet .grab{width:38px;height:3px;border-radius:9px;background:rgba(201,169,107,.45);margin:0 auto 14px}
+.sheet h2{font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:20px}
+.sheet h3{font-family:var(--display);font-weight:700;letter-spacing:.12em;color:var(--brass2);font-size:14px;margin:22px 0 6px}
+.sheet .sub{font-size:12.5px;color:var(--muted);margin:4px 0 14px;line-height:1.7}
+.sheet hr{border:0;border-top:1px solid var(--line);margin:22px 0}
+.form{display:flex;flex-direction:column;gap:13px}
+.f{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:500;color:var(--brass);letter-spacing:.12em}
+.f input,.f textarea,.f select{font-family:inherit;font-size:16px;font-weight:500;letter-spacing:.02em;color:var(--paper);background:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;outline:none;width:100%}
+.f input:focus,.f textarea:focus,.f select:focus{border-color:var(--brass);box-shadow:0 0 0 3px rgba(201,169,107,.14)}
+.f textarea{min-height:64px;resize:vertical}
+.f .n{font-weight:400;font-size:11.5px;color:var(--muted);letter-spacing:.04em}
+.tr{display:flex;align-items:center;gap:8px}.tr select{flex:1;min-width:0}.tr .sep{color:var(--muted)}
+.dup{font-size:12.5px;font-weight:700;color:var(--bad);background:rgba(224,122,110,.12);border:1px solid rgba(224,122,110,.35);border-radius:10px;padding:9px 11px;line-height:1.6}
+.msg{font-size:13px;font-weight:700;color:var(--good);min-height:18px;margin-top:8px}
+.msg.err{color:var(--bad)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin:7px 0}
+.row .n{font-weight:700;font-size:15px}.row .a{font-size:11.5px;color:var(--muted);margin-top:2px}
+.row button{border:0;background:none;color:var(--muted);font-size:12.5px;font-weight:700;letter-spacing:.1em;padding:6px 4px}
+textarea.bk{width:100%;min-height:84px;font-size:11px;font-family:ui-monospace,monospace;background:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- 会社を選ぶ -->
+<div class="gate hid" id="gateCo"><div class="in">
+  <img class="logo" src="icon-192.png" alt="">
+  <h1>配達先さがし</h1>
+  <p class="lead">ご利用の会社を選んでください。会社ごとに、登録したデータは完全に分かれています。</p>
+  <div class="pull"><label for="coSel">会社を選ぶ</label><select id="coSel"></select></div>
+  <div class="acts"><button class="btn main flex1" id="coGo">この会社で入る</button></div>
+  <p class="note-s" id="coNote"></p>
+</div></div>
+
+<!-- PASS -->
+<div class="gate hid" id="gatePw"><div class="in">
+  <div class="passbox">
+    <div class="who"><span class="mk" id="pMark"></span><b id="pName"></b></div>
+    <label for="pwIn">PASS(パスワード)を入れてください</label>
+    <input id="pwIn" type="password" inputmode="numeric" autocomplete="off" placeholder="••••">
+    <div class="perr" id="pwErr"></div>
+    <div class="acts"><button class="btn main flex1" id="pwGo">入る</button></div>
+    <p class="note-s">一度入れば、この端末では次から入力しなくて大丈夫です。</p>
+  </div>
+  <button class="bl" id="pwBack">← 会社を選びなおす</button>
+</div></div>
+
+<div class="app hid" id="app">
+  <header class="band">
+    <img class="ico" src="icon-192.png" alt="">
+    <div class="t"><b id="coName"></b><span id="coCount"></span></div>
+    <button class="gear" id="openSet" aria-label="設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+  </header>
+  <div class="sync hid" id="sync"></div>
+  <section class="view">
+    <div class="searchbar"><input id="q" type="text" inputmode="search" placeholder="発泡スチロールの名前を入力" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <div class="hint">箱に書いてある名前をそのまま入れてください。一部だけでもヒットします。</div>
+    <div id="results"></div>
+  </section>
+  <button class="fab" id="openForm" aria-label="登録"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>登録</button>
+</div>
+
+<!-- 登録・編集 -->
+<div class="back hid" id="bkForm"></div>
+<div class="sheet hid" id="shForm">
+  <div class="grab"></div>
+  <h2 id="fTitle">配達先を登録</h2>
+  <p class="sub">呼び名は複数登録できます。カンマ区切りで入れてください。</p>
+  <div class="form">
+    <label class="f">正式名・表示名<input id="fName" type="text" placeholder="例:日の出水産 中央店"></label>
+    <div class="dup hid" id="fDup"></div>
+    <label class="f">呼び名・別名(カンマ区切り)<textarea id="fAl" placeholder="例:中央、ヒノデ、なかおう"></textarea><span class="n">箱にはこの呼び名で書かれていることが多い、という表記をすべて入れてください</span></label>
+    <div class="f">配達時間帯<div class="tr"><select id="fT1"></select><span class="sep">〜</span><select id="fT2"></select></div></div>
+    <label class="f">車の種類・特徴<input id="fCar" type="text" placeholder="例:白い軽トラ、№369"></label>
+    <label class="f">車・置き場所<input id="fLoc" type="text" placeholder="例:2番搬入口の脇"></label>
+    <label class="f">メモ<textarea id="fNote" placeholder="例:不在時はA5ロッカーへ、伝票は畳んで1個ずつ"></textarea></label>
+  </div>
+  <div class="msg" id="fMsg"></div>
+  <div class="acts">
+    <button class="btn danger hid" id="fDel">削除</button>
+    <button class="btn ghost flex1" id="fCancel">キャンセル</button>
+    <button class="btn main flex1" id="fSave">保存</button>
+  </div>
+</div>
+
+<!-- 設定 -->
+<div class="back hid" id="bkSet"></div>
+<div class="sheet hid" id="shSet">
+  <div class="grab"></div>
+  <h2>設定</h2>
+  <p class="sub" id="setSub"></p>
+  <h3>PASSを変える</h3>
+  <p class="sub">この会社に入るための合言葉です。変えたら、関係者に新しい番号を口頭などで伝えてください。</p>
+  <div class="form"><label class="f">新しいPASS<input id="newPw" type="password" inputmode="numeric" placeholder="4桁以上の数字や文字"></label>
+  <button class="btn navy" id="savePw">PASSを変更</button></div>
+  <div class="msg" id="setMsg"></div>
+  <hr>
+  <h3>登録済み一覧</h3>
+  <div id="allList"></div>
+  <hr>
+  <h3>バックアップ</h3>
+  <p class="sub">機種変更やデータ消去に備え、時々このテキストをメモ帳などにコピーして保存してください。</p>
+  <textarea class="bk" id="bkText" readonly></textarea>
+  <div class="acts"><button class="btn line flex1" id="bkCopy">コピー</button><button class="btn line flex1" id="bkRestore">この内容から復元</button></div>
+  <hr>
+  <div class="acts">
+    <button class="btn line flex1" id="swCo">会社を切り替える</button>
+    <button class="btn ghost flex1" id="logout">この端末のPASSを忘れる</button>
+  </div>
+  <div class="acts"><button class="btn navy flex1" id="setClose">閉じる</button></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+/* ================= 設定 =================
+ API_URL が空 = デモ版(この端末のブラウザの中だけに保存。サーバーには送らない)
+ 本番は、gas/Code.gs をデプロイしたURLを入れる。会社は、サーバー側(スプレッドシートの companies シート)に
+ CEOが追加する。ここ(画面)を直す必要はない。 */
+var API_URL="https://script.google.com/macros/s/AKfycbwMEbsxiz8X5MXAtEANJRcdX4FWjtYDnY61cNgkTNvI_pYJXkTPuOre2t0r3V1rduDH/exec";
+var DEMO_COMPANIES=[
+  {id:"hinode",name:"日の出本田水産",mark:"日",color:"#1f4e79",pw:"1111",seed:[
+    {id:"d1",name:"寿司 海風 本店",aliases:["うみかぜ","海風"],time:"6:30〜7:15",car:"白いハイエース №12",loc:"2番搬入口の脇",note:"伝票は畳んで1個ずつ。不在時は冷蔵庫の上段へ"},
+    {id:"d2",name:"居酒屋 ひなた",aliases:["ひなた","日向"],time:"7:00〜8:00",car:"青い軽トラ",loc:"裏口の台車置き場",note:""},
+    {id:"d3",name:"ホテル さくら亭 厨房",aliases:["さくら","桜亭"],time:"5:45〜6:30",car:"白いトラック №3",loc:"業者用入口",note:"受け取りは料理長の田中さん。検品に5分かかる"}]},
+  {id:"aoike",name:"青池水産",mark:"青",color:"#1f6f8b",pw:"2222",seed:[
+    {id:"a1",name:"割烹 まつかぜ",aliases:["松風","まつかぜ"],time:"6:00〜6:45",car:"白い軽トラ №8",loc:"勝手口",note:""}]}
+];
+
+/* ---- 状態 ---- */
+var COMPS=[],CO=null,PW="",entries=[],editingId=null;
+
+/* ---- 端末の中の保存(使えない環境では、開いている間だけ覚える) ---- */
+var MEM={};
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return MEM[k]||null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){MEM[k]=v}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){delete MEM[k]}}
+function jget(k,d){var r=lsGet(k);try{return r?JSON.parse(r):d}catch(e){return d}}
+
+/* ---- 通信(デモ: この端末の中 / 本番: Apps Script) ---- */
+function demoApi(b){
+  if(b.action==="companies")return {ok:true,data:{companies:DEMO_COMPANIES.map(function(c){return {id:c.id,name:c.name,mark:c.mark,color:c.color}})}};
+  var c=DEMO_COMPANIES.filter(function(x){return x.id===b.company})[0];if(!c)return {ok:false,error:"bad_company"};
+  var real=lsGet("hl_demo_pw_"+c.id)||c.pw;if(String(b.pw)!==String(real))return {ok:false,error:"bad_pw"};
+  var key="hl_demo_items_"+c.id,items=jget(key,null);if(items===null){items=c.seed.slice();lsSet(key,JSON.stringify(items))}
+  if(b.action==="upsert"){var i=items.findIndex(function(x){return x.id===b.item.id});if(i>=0)items[i]=b.item;else items.push(b.item);lsSet(key,JSON.stringify(items))}
+  else if(b.action==="delete"){items=items.filter(function(x){return x.id!==b.id});lsSet(key,JSON.stringify(items))}
+  else if(b.action==="setPw"){lsSet("hl_demo_pw_"+c.id,String(b.newPw));return {ok:true,data:{items:items}}}
+  else if(b.action!=="list")return {ok:false,error:"bad_action"};
+  return {ok:true,data:{items:items}};
+}
+function api(b){
+  if(!API_URL)return Promise.resolve(demoApi(b));
+  return fetch(API_URL,{method:"POST",body:JSON.stringify(b)}).then(function(r){return r.json()}).catch(function(e){return {ok:false,error:"network",message:String(e)}});
+}
+
+/* ---- 画面の切り替え ---- */
+function show(id){["gateCo","gatePw","app"].forEach(function(x){$("#"+x).classList.toggle("hid",x!==id)});window.scrollTo(0,0)}
+function comp(id){return COMPS.filter(function(c){return c.id===id})[0]}
+
+/* ---- 会社を選ぶ(プルダウン) ---- */
+function chooseCo(){
+  var last=lsGet("hl_last");if(!comp(last))last=COMPS[0]&&COMPS[0].id;
+  $("#coSel").innerHTML=COMPS.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===last?" selected":"")+'>'+esc(c.name)+'</option>'}).join("");
+  $("#coNote").textContent=API_URL?"":"デモ版: 表示されるデータは、この端末の中だけに保存されます";
+  show("gateCo");
+}
+$("#coGo").onclick=function(){if($("#coSel").value)enterCo($("#coSel").value)};
+
+function enterCo(id){
+  CO=id;lsSet("hl_last",id);var c=comp(id);
+  $("#coName").textContent=c.name;document.title=c.name+" | 配達先さがし";
+  var saved=lsGet("hl_pw_"+id);
+  if(saved){login(saved,true);return}
+  $("#pMark").textContent=c.mark||c.name.charAt(0);$("#pMark").style.background=c.color||"#1f4e79";$("#pName").textContent=c.name;
+  $("#pwErr").textContent="";$("#pwIn").value="";show("gatePw");setTimeout(function(){$("#pwIn").focus()},80);
+}
+function login(pw,silent){
+  $("#pwGo").disabled=true;
+  api({action:"list",company:CO,pw:pw}).then(function(res){
+    $("#pwGo").disabled=false;
+    if(res&&res.ok){PW=pw;lsSet("hl_pw_"+CO,pw);entries=(res.data&&res.data.items)||[];lsSet("hl_cache_"+CO,JSON.stringify(entries));setSync("");openApp()}
+    else if(res&&res.error==="network"){var cache=jget("hl_cache_"+CO,null);
+      if(cache&&silent){PW=pw;entries=cache;setSync("⚠ 最新データを読み込めませんでした。この端末に保存されていた分だけ表示しています","warn");openApp()}
+      else{$("#pwErr").textContent="通信できませんでした。電波のよい所でもう一度";show("gatePw")}}
+    else if(res&&res.error==="no_pw"&&!silent){
+      if(pw.length<4){$("#pwErr").textContent="この会社は、まだPASSが決まっていません。4文字以上で入れてください";return}
+      if(!window.confirm("この会社は、まだPASSが決まっていません。いま入れた「"+pw.replace(/./g,"•")+"」(" +pw.length+"文字)をPASSにしますか?"))return;
+      api({action:"initPw",company:CO,newPw:pw}).then(function(r2){if(r2&&r2.ok){PW=pw;lsSet("hl_pw_"+CO,pw);entries=r2.data.items||[];lsSet("hl_cache_"+CO,JSON.stringify(entries));openApp()}else $("#pwErr").textContent="PASSを決められませんでした"})}
+    else{lsDel("hl_pw_"+CO);if(silent){enterCo(CO)}else $("#pwErr").textContent="PASSが違います"}
+  });
+}
+$("#pwGo").onclick=function(){var v=$("#pwIn").value.trim();if(!v)return;login(v,false)};
+$("#pwIn").addEventListener("keydown",function(e){if(e.key==="Enter")$("#pwGo").click()});
+$("#pwBack").onclick=chooseCo;
+
+function setSync(t,kind){var el=$("#sync");if(!t){el.classList.add("hid");return}el.textContent=t;el.className="sync"+(kind==="warn"?" warn":"");}
+function openApp(){show("app");renderAll();$("#q").value="";renderResults()}
+
+/* ---- 検索 ---- */
+function norm(s){if(!s)return "";return String(s).toLowerCase().replace(/\s+/g,"")
+  .replace(/[ァ-ヶ]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0x60)})
+  .replace(/[Ａ-Ｚａ-ｚ０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0)})}
+function aliasesOf(e){return (e.aliases||[]).filter(Boolean)}
+function search(query){var q=norm(query);if(!q)return [];var sc=[];
+  entries.forEach(function(e){var best=-1;[e.name].concat(aliasesOf(e)).forEach(function(c){var n=norm(c);if(!n)return;
+    if(n===q)best=Math.max(best,100);else if(n.indexOf(q)!==-1||q.indexOf(n)!==-1)best=Math.max(best,50+Math.min(n.length,q.length))});
+    if(best>=0)sc.push({e:e,s:best})});
+  sc.sort(function(a,b){return b.s-a.s});return sc.map(function(x){return x.e})}
+function byId(id){return entries.filter(function(e){return e.id===id})[0]}
+
+function row(k,v,cls){var has=v&&String(v).trim();return '<div class="k">'+k+'</div><div class="v '+(cls||"")+(has?"":" empty")+'">'+(has?esc(v):"未登録")+'</div>'}
+function renderResults(){
+  var q=$("#q").value,box=$("#results");
+  if(!q.trim()){box.innerHTML=entries.length?'<div class="idle">名前を入力すると配達先が出ます<br>登録 <b>'+entries.length+'</b> 件</div>':'<div class="none"><div class="big">—</div>まだ配達先が登録されていません<br>右下の「登録」から登録してください</div>';return}
+  var found=search(q);
+  if(!found.length){box.innerHTML='<div class="none"><div class="big">—</div>「'+esc(q)+'」に一致する配達先がありません<div><button class="btn main add-new" id="quickAdd">この名前で新規登録</button></div></div>';$("#quickAdd").onclick=function(){openForm(null,q)};return}
+  box.innerHTML=found.map(function(e){var al=aliasesOf(e).join("、");
+    return '<div class="card"><div class="head"><div><div class="nm">'+esc(e.name)+'</div>'+(al?'<div class="al">呼び名: '+esc(al)+'</div>':'')+'</div><button class="edit" data-e="'+esc(e.id)+'">編集</button></div>'
+      +'<div class="time"><small>時間帯</small>'+(e.time?'<b>'+esc(e.time)+'</b>':'<b class="empty">未登録</b>')+'</div>'
+      +'<div class="rows">'+row("車",e.car)+row("場所",e.loc)+(e.note&&e.note.trim()?row("メモ",e.note,"note"):"")+'</div></div>'}).join("");
+  Array.prototype.forEach.call(box.querySelectorAll("[data-e]"),function(b){b.onclick=function(){var e=byId(b.getAttribute("data-e"));if(e)openForm(e)}});
+}
+$("#q").addEventListener("input",renderResults);
+function renderAll(){$("#coCount").textContent=entries.length+"件登録";renderList();$("#bkText").value=JSON.stringify(entries)}
+function renderList(){var L=$("#allList");if(!entries.length){L.innerHTML='<p class="sub">まだありません</p>';return}
+  L.innerHTML=entries.slice().sort(function(a,b){return a.name.localeCompare(b.name,"ja")}).map(function(e){var al=aliasesOf(e).join("、");
+    return '<div class="row"><div><div class="n">'+esc(e.name)+'</div>'+(al?'<div class="a">'+esc(al)+'</div>':'')+'</div><button data-qe="'+esc(e.id)+'">編集</button></div>'}).join("");
+  Array.prototype.forEach.call(L.querySelectorAll("[data-qe]"),function(b){b.onclick=function(){closeSheet("shSet","bkSet");openForm(byId(b.getAttribute("data-qe")))}})}
+
+/* ---- シート ---- */
+function openSheet(id,bk){$("#"+id).classList.remove("hid");$("#"+bk).classList.remove("hid")}
+function closeSheet(id,bk){$("#"+id).classList.add("hid");$("#"+bk).classList.add("hid")}
+(function(){var h='<option value="">--:--</option>';for(var i=0;i<24;i++)for(var m=0;m<60;m+=15)h+='<option value="'+i+":"+(m<10?"0"+m:m)+'">'+i+":"+(m<10?"0"+m:m)+'</option>';$("#fT1").innerHTML=h;$("#fT2").innerHTML=h})();
+function splitT(t){if(!t)return ["",""];var p=t.split(/[〜～\-~]/).map(function(s){return s.trim()});return [p[0]||"",p[1]||""]}
+function openForm(e,pre){
+  editingId=e?e.id:null;$("#fTitle").textContent=e?"配達先を編集":"配達先を登録";
+  $("#fName").value=e?e.name:(pre||"");$("#fAl").value=e?aliasesOf(e).join("、"):"";
+  var t=splitT(e?e.time:"");$("#fT1").value=t[0];$("#fT2").value=t[1];
+  $("#fCar").value=e?(e.car||""):"";$("#fLoc").value=e?(e.loc||""):"";$("#fNote").value=e?(e.note||""):"";
+  $("#fDel").classList.toggle("hid",!e);$("#fMsg").textContent="";$("#fMsg").className="msg";
+  openSheet("shForm","bkForm");dupCheck();setTimeout(function(){$("#fName").focus()},60);
+}
+function dupCheck(){var w=$("#fDup");if(editingId){w.classList.add("hid");return}var v=$("#fName").value.trim();if(!v){w.classList.add("hid");return}
+  var m=search(v).slice(0,3);if(m.length){w.textContent="⚠ 似た名前がすでに登録されています: "+m.map(function(x){return x.name}).join("、")+"。同じ配達先なら、新規登録せず「登録済み一覧」から編集してください。";w.classList.remove("hid")}else w.classList.add("hid")}
+$("#fName").addEventListener("input",dupCheck);
+function splitAl(t){return t.split(/[、,，\n]/).map(function(s){return s.trim()}).filter(Boolean)}
+function changed(res,okText){entries=(res.data&&res.data.items)||entries;lsSet("hl_cache_"+CO,JSON.stringify(entries));closeSheet("shForm","bkForm");renderAll();renderResults();setSync(okText);setTimeout(function(){setSync("")},2000)}
+$("#fSave").onclick=function(){
+  var name=$("#fName").value.trim();if(!name){$("#fName").focus();return}
+  var t1=$("#fT1").value,t2=$("#fT2").value;
+  var rec={id:editingId||("d_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,7)),name:name,aliases:splitAl($("#fAl").value),time:(t1&&t2)?t1+"〜"+t2:(t1||t2||""),car:$("#fCar").value.trim(),loc:$("#fLoc").value.trim(),note:$("#fNote").value.trim()};
+  $("#fMsg").className="msg";$("#fMsg").textContent="保存中…";
+  api({action:"upsert",company:CO,item:rec,pw:PW}).then(function(res){
+    if(res&&res.ok)changed(res,"保存しました");
+    else if(res&&res.error==="bad_pw"){$("#fMsg").className="msg err";$("#fMsg").textContent="PASSが変わっています。入りなおしてください";lsDel("hl_pw_"+CO)}
+    else{$("#fMsg").className="msg err";$("#fMsg").textContent="⚠ 保存に失敗しました("+((res&&(res.message||res.error))||"unknown")+")"}});
+};
+$("#fDel").onclick=function(){if(!editingId)return;var id=editingId;if(!window.confirm("この配達先を削除します。よろしいですか?"))return;
+  api({action:"delete",company:CO,id:id,pw:PW}).then(function(res){if(res&&res.ok)changed(res,"削除しました");else{$("#fMsg").className="msg err";$("#fMsg").textContent="⚠ 削除に失敗しました"}})};
+$("#fCancel").onclick=$("#bkForm").onclick=function(){closeSheet("shForm","bkForm");editingId=null};
+$("#openForm").onclick=function(){openForm(null)};
+
+/* ---- 設定 ---- */
+$("#openSet").onclick=function(){$("#setSub").textContent=comp(CO).name+" の設定 / 登録 "+entries.length+"件";$("#setMsg").textContent="";renderAll();openSheet("shSet","bkSet")};
+$("#setClose").onclick=$("#bkSet").onclick=function(){closeSheet("shSet","bkSet")};
+$("#swCo").onclick=function(){closeSheet("shSet","bkSet");chooseCo()};
+$("#logout").onclick=function(){lsDel("hl_pw_"+CO);closeSheet("shSet","bkSet");PW="";enterCo(CO)};
+$("#savePw").onclick=function(){var np=$("#newPw").value.trim();if(np.length<4){$("#setMsg").className="msg err";$("#setMsg").textContent="4文字以上で入れてください";return}
+  api({action:"setPw",company:CO,newPw:np,pw:PW}).then(function(res){
+    if(res&&res.ok){PW=np;lsSet("hl_pw_"+CO,np);$("#newPw").value="";$("#setMsg").className="msg";$("#setMsg").textContent="PASSを変更しました。関係者に新しいPASSを伝えてください"}
+    else{$("#setMsg").className="msg err";$("#setMsg").textContent="変更できませんでした"}})};
+$("#bkCopy").onclick=function(){var t=$("#bkText");t.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}if(!ok&&navigator.clipboard)navigator.clipboard.writeText(t.value);$("#setMsg").className="msg";$("#setMsg").textContent="コピーしました"};
+$("#bkRestore").onclick=function(){var list;try{list=JSON.parse($("#bkText").value);if(!Array.isArray(list))throw 0}catch(e){$("#setMsg").className="msg err";$("#setMsg").textContent="内容を読み取れませんでした";return}
+  $("#setMsg").className="msg";$("#setMsg").textContent="復元中…";
+  var p=Promise.resolve(true);list.forEach(function(it){p=p.then(function(ok){return ok===false?false:api({action:"upsert",company:CO,item:it,pw:PW}).then(function(r){return !(r&&r.error==="bad_pw")})})});
+  p.then(function(){return api({action:"list",company:CO,pw:PW})}).then(function(res){if(res&&res.ok){entries=res.data.items;renderAll();renderResults();$("#setMsg").textContent="復元しました("+entries.length+"件)"}})};
+
+/* ---- 起動 ---- */
+api({action:"companies"}).then(function(res){
+  if(res&&res.ok){COMPS=res.data.companies||[];lsSet("hl_comps",JSON.stringify(COMPS))}
+  else COMPS=jget("hl_comps",[]);
+  if(!COMPS.length){$("#gateCo").classList.remove("hid");$("#gateCo").querySelector(".lead").textContent="会社の一覧を読み込めませんでした。電波のよい所で、もう一度開いてください。";return}
+  var last=lsGet("hl_last");
+  if(last&&comp(last)&&lsGet("hl_pw_"+last))enterCo(last);else chooseCo();
+});
+})();
+</script>
+</body>
+</html>
